@@ -35,13 +35,17 @@ export default function Dashboard({ initialData }: DashboardProps) {
     const initializeData = async () => {
       try {
         setLoading(true)
+        console.log('🔍 Starting Supabase initialization...')
+        
         // Initialize user in Supabase
         const user = await supabaseService.initializeUser({
           email: 'user@example.com',
           name: 'User'
         })
+        console.log('✅ User initialized:', user)
 
         // Load all data from Supabase
+        console.log('📊 Loading data from Supabase...')
         const [expenses, incomes, categories, savingsGoals, insights, alerts] = await Promise.all([
           supabaseService.getExpenses(),
           supabaseService.getIncomes(),
@@ -50,6 +54,15 @@ export default function Dashboard({ initialData }: DashboardProps) {
           supabaseService.getInsights(),
           supabaseService.getAlerts()
         ])
+        
+        console.log('📈 Data loaded:', {
+          expenses: expenses.length,
+          incomes: incomes.length,
+          categories: categories.length,
+          savingsGoals: savingsGoals.length,
+          insights: insights.length,
+          alerts: alerts.length
+        })
 
         // Update app data with Supabase data
         setAppData({
@@ -62,10 +75,12 @@ export default function Dashboard({ initialData }: DashboardProps) {
           alerts: alerts as any,
           user: user as any
         })
+        console.log('✅ App data updated with Supabase data')
       } catch (error) {
-        console.error('Error initializing data:', error)
+        console.error('❌ Error initializing data:', error)
         // Fallback to initial data if Supabase fails
         setAppData(initialData)
+        console.log('⚠️ Falling back to localStorage data')
       } finally {
         setLoading(false)
       }
@@ -76,6 +91,7 @@ export default function Dashboard({ initialData }: DashboardProps) {
 
   const onAddExpense = async (expense: Expense) => {
     try {
+      console.log('➕ Adding expense to Supabase:', expense)
       const newExpense = await supabaseService.addExpense({
         amount: expense.amount,
         note: expense.note || '',
@@ -83,12 +99,14 @@ export default function Dashboard({ initialData }: DashboardProps) {
         date: expense.date,
         paymentMethod: expense.paymentMethod || 'cash'
       })
+      console.log('✅ Expense added to Supabase:', newExpense)
       
       const updatedExpenses = [...appData.expenses, newExpense as any]
       const updatedData = { ...appData, expenses: updatedExpenses }
       setAppData(updatedData)
+      console.log('📊 Updated app data with new expense')
     } catch (error) {
-      console.error('Error adding expense:', error)
+      console.error('❌ Error adding expense:', error)
     }
   }
 
