@@ -24,8 +24,8 @@ class SupabaseService {
         key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Not set'
       })
       
-      // For now, we'll use a default user ID since we don't have auth
-      this.currentUserId = 'default-user-id'
+      // Use a proper UUID for the default user ID
+      this.currentUserId = '00000000-0000-0000-0000-000000000001'
       console.log('🔧 SupabaseService: Using user ID:', this.currentUserId)
       
       // Check if user exists
@@ -149,7 +149,7 @@ class SupabaseService {
       console.log('🔧 SupabaseService: Current user ID:', this.currentUserId)
       
       const newExpense = {
-        id: uuidv4(),
+        id: uuidv4(), // This generates a proper UUID
         user_id: this.currentUserId,
         amount: expenseData.amount,
         description: expenseData.note || '',
