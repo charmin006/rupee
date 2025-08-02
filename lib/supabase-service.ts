@@ -18,21 +18,34 @@ class SupabaseService {
   // Initialize user (create if doesn't exist)
   async initializeUser(userData: Partial<User>): Promise<User> {
     try {
+      console.log('🔧 SupabaseService: Initializing user...')
+      console.log('🔧 SupabaseService: Environment variables:', {
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Not set',
+        key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Not set'
+      })
+      
       // For now, we'll use a default user ID since we don't have auth
       this.currentUserId = 'default-user-id'
+      console.log('🔧 SupabaseService: Using user ID:', this.currentUserId)
       
       // Check if user exists
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', this.currentUserId)
         .single()
 
+      if (userError) {
+        console.log('🔧 SupabaseService: User not found, will create new user')
+      }
+
       if (existingUser) {
+        console.log('🔧 SupabaseService: Existing user found:', existingUser.id)
         return existingUser as User
       }
 
       // Create new user
+      console.log('🔧 SupabaseService: Creating new user...')
       const newUser: User = {
         id: this.currentUserId,
         email: userData.email || 'user@example.com',
@@ -85,10 +98,15 @@ class SupabaseService {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('🔧 SupabaseService: Error creating user:', error)
+        throw error
+      }
+      
+      console.log('🔧 SupabaseService: User created successfully:', data.id)
       return data as User
     } catch (error) {
-      console.error('Error initializing user:', error)
+      console.error('🔧 SupabaseService: Error initializing user:', error)
       throw error
     }
   }
@@ -96,13 +114,19 @@ class SupabaseService {
   // Expense operations
   async getExpenses(): Promise<Expense[]> {
     try {
+      console.log('🔧 SupabaseService: Fetching expenses for user:', this.currentUserId)
       const { data, error } = await supabase
         .from('expenses')
         .select('*')
         .eq('user_id', this.currentUserId)
         .order('date', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('🔧 SupabaseService: Error fetching expenses:', error)
+        throw error
+      }
+      
+      console.log('🔧 SupabaseService: Found expenses:', data?.length || 0)
       return (data || []).map(expense => ({
         id: expense.id,
         amount: expense.amount,
@@ -114,13 +138,16 @@ class SupabaseService {
         updatedAt: expense.updated_at
       }))
     } catch (error) {
-      console.error('Error fetching expenses:', error)
+      console.error('🔧 SupabaseService: Error fetching expenses:', error)
       return []
     }
   }
 
   async addExpense(expenseData: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>): Promise<Expense> {
     try {
+      console.log('🔧 SupabaseService: Adding expense:', expenseData)
+      console.log('🔧 SupabaseService: Current user ID:', this.currentUserId)
+      
       const newExpense = {
         id: uuidv4(),
         user_id: this.currentUserId,
@@ -131,13 +158,19 @@ class SupabaseService {
         payment_method: expenseData.paymentMethod
       }
 
+      console.log('🔧 SupabaseService: Inserting expense:', newExpense)
       const { data, error } = await supabase
         .from('expenses')
         .insert([newExpense])
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('🔧 SupabaseService: Error adding expense:', error)
+        throw error
+      }
+      
+      console.log('🔧 SupabaseService: Expense added successfully:', data.id)
       return {
         id: data.id,
         amount: data.amount,
@@ -149,7 +182,7 @@ class SupabaseService {
         updatedAt: data.updated_at
       }
     } catch (error) {
-      console.error('Error adding expense:', error)
+      console.error('🔧 SupabaseService: Error adding expense:', error)
       throw error
     }
   }
