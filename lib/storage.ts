@@ -1,5 +1,5 @@
 import { AppData, Expense, Income, Category, User, SavingsGoal, SpendingInsight, SpendingAlert, BudgetLimit, AlertSettings, RecurringExpense, UserProfile, SecuritySettings, Achievement, StreakData, BackupRecord } from './types';
-import surrealDB from './surrealdb';
+// import surrealDB from './surrealdb'; // Temporarily disabled for deployment
 
 const STORAGE_KEYS = {
   APP_DATA: 'rupee_app_data',
@@ -815,79 +815,21 @@ class StorageManager {
     return false;
   }
 
-  // SurrealDB Integration Methods
+  // SurrealDB Integration Methods (Temporarily disabled for deployment)
   async isSurrealDBAvailable(): Promise<boolean> {
-    try {
-      await surrealDB.connect();
-      return true;
-    } catch (error) {
-      console.log('SurrealDB not available:', error);
-      return false;
-    }
+    // Temporarily disabled for deployment
+    return false;
   }
 
   async migrateToSurrealDB(): Promise<boolean> {
-    try {
-      const isAvailable = await this.isSurrealDBAvailable();
-      if (!isAvailable) {
-        console.log('SurrealDB not available for migration');
-        return false;
-      }
-
-      const localData = this.getAppData();
-      
-      // Create user in SurrealDB
-      const user = await surrealDB.createUser(localData.user);
-      if (!user) {
-        console.error('Failed to create user in SurrealDB');
-        return false;
-      }
-
-      const userId = typeof user.id === 'object' ? user.id.id : user.id;
-
-      // Migrate expenses
-      for (const expense of localData.expenses) {
-        await surrealDB.createExpense({
-          ...expense,
-          userId: userId
-        });
-      }
-
-      // Migrate incomes
-      for (const income of localData.incomes) {
-        await surrealDB.createIncome({
-          ...income,
-          userId: userId
-        });
-      }
-
-      // Migrate categories
-      for (const category of localData.categories) {
-        await surrealDB.createCategory({
-          ...category,
-          userId: userId
-        });
-      }
-
-      console.log('✅ Successfully migrated data to SurrealDB');
-      return true;
-    } catch (error) {
-      console.error('❌ Error migrating to SurrealDB:', error);
-      return false;
-    }
+    // Temporarily disabled for deployment
+    console.log('SurrealDB migration temporarily disabled for deployment');
+    return false;
   }
 
   async getSurrealDBStatus(): Promise<{ connected: boolean; message: string }> {
-    try {
-      const isAvailable = await this.isSurrealDBAvailable();
-      if (isAvailable) {
-        return { connected: true, message: 'Connected to SurrealDB' };
-      } else {
-        return { connected: false, message: 'SurrealDB not available' };
-      }
-    } catch (error) {
-      return { connected: false, message: `Error: ${error}` };
-    }
+    // Temporarily disabled for deployment
+    return { connected: false, message: 'SurrealDB temporarily disabled for deployment' };
   }
 }
 

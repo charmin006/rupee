@@ -1,16 +1,37 @@
 {
   "pages": {
-    "/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/page.css",
-      "static/chunks/app/page.js"
+    "/_not-found/page": [
+      "static/chunks/webpack-c7f63563c7d0c981.js",
+      "static/chunks/fd9d1056-70d105343b8a0073.js",
+      "static/chunks/117-277b4b9a176f0325.js",
+      "static/chunks/main-app-e36e158103ce2472.js",
+      "static/chunks/app/_not-found/page-e7a550df9d431a6e.js"
     ],
     "/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/layout.css",
-      "static/chunks/app/layout.js"
+      "static/chunks/webpack-c7f63563c7d0c981.js",
+      "static/chunks/fd9d1056-70d105343b8a0073.js",
+      "static/chunks/117-277b4b9a176f0325.js",
+      "static/chunks/main-app-e36e158103ce2472.js",
+      "static/css/5c804d9f7a4bc9a0.css",
+      "static/chunks/64-a453b2c44e0e31f7.js",
+      "static/chunks/app/layout-8da837d95b1beb30.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-c7f63563c7d0c981.js",
+      "static/chunks/fd9d1056-70d105343b8a0073.js",
+      "static/chunks/117-277b4b9a176f0325.js",
+      "static/chunks/main-app-e36e158103ce2472.js",
+      "static/css/c104401138f68e2c.css",
+      "static/chunks/64-a453b2c44e0e31f7.js",
+      "static/chunks/399-b4b7a17fdacde68e.js",
+      "static/chunks/app/page-a373211a401c8130.js"
+    ],
+    "/surrealdb-test/page": [
+      "static/chunks/webpack-c7f63563c7d0c981.js",
+      "static/chunks/fd9d1056-70d105343b8a0073.js",
+      "static/chunks/117-277b4b9a176f0325.js",
+      "static/chunks/main-app-e36e158103ce2472.js",
+      "static/chunks/app/surrealdb-test/page-81ee09bc5901927c.js"
     ]
   }
 }

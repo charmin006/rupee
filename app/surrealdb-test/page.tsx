@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import surrealDB from '@/lib/surrealdb'
+// import surrealDB from '@/lib/surrealdb' // Temporarily disabled for deployment
 
 export default function SurrealDBTest() {
   const [status, setStatus] = useState<string>('Connecting...')
@@ -14,112 +14,8 @@ export default function SurrealDBTest() {
 
   const testSurrealDB = async () => {
     try {
-      setStatus('Connecting to SurrealDB...')
-      
-      // Test connection
-      await surrealDB.connect()
-      setStatus('Connected to SurrealDB!')
-      
-      // Test creating a user
-      setStatus('Creating test user...')
-      const userData = {
-        email: 'test@example.com',
-        name: 'Test User',
-        preferences: {
-          currency: '₹',
-          theme: 'light',
-          monthlyBudget: 50000,
-          notifications: true,
-          defaultPaymentMethod: 'cash',
-          budgetLimits: [],
-          alertSettings: {
-            overspendingAlerts: true,
-            budgetLimitAlerts: true,
-            savingsGoalAlerts: true,
-            weeklyInsights: true,
-            emailNotifications: false,
-            pushNotifications: true
-          },
-          gamificationEnabled: true,
-          autoBackupEnabled: false,
-          cloudSyncEnabled: false,
-          receiptScanningEnabled: false
-        },
-        profiles: [],
-        activeProfileId: '',
-        securitySettings: {
-          pinEnabled: false,
-          biometricEnabled: false,
-          autoLockTimeout: 5,
-          requireAuthForExport: true,
-          requireAuthForSettings: false
-        },
-        achievements: [],
-        streaks: {
-          currentStreak: 0,
-          longestStreak: 0,
-          noSpendDays: 0,
-          totalNoSpendDays: 0,
-          currentNoSpendStreak: 0,
-          longestNoSpendStreak: 0
-        }
-      }
-      
-      const user = await surrealDB.createUser(userData)
-      console.log('Created user:', user) // Debug log
-      setStatus('Test user created!')
-      
-      // Fix any existing users with NONE values
-      setStatus('Fixing existing users...')
-      await surrealDB.fixAllUsers()
-      setStatus('All users fixed!')
-      
-      // Fix any existing records with string dates
-      setStatus('Fixing date fields...')
-      await surrealDB.fixDateFieldsSimple()
-      setStatus('Date fields fixed!')
-      
-      // Fix any existing records with record references
-      setStatus('Fixing record references...')
-      await surrealDB.fixRecordReferences()
-      setStatus('Record references fixed!')
-      
-      // Test creating an expense
-      setStatus('Creating test expense...')
-      // Extract user ID safely
-      let userId = user.id
-      if (typeof userId === 'object' && userId.id) {
-        // Handle _RecordId object
-        userId = userId.id
-      } else if (typeof userId === 'string' && userId.includes(':')) {
-        // Handle string record reference
-        userId = userId.split(':')[1]
-      }
-      
-      const expenseData = {
-        userId: userId,
-        amount: 1500,
-        description: 'Test lunch expense',
-        categoryId: 'food',
-        date: new Date(),
-        paymentMethod: 'cash'
-      }
-      
-      const expense = await surrealDB.createExpense(expenseData)
-      setStatus('Test expense created!')
-      
-      // Test retrieving data
-      setStatus('Retrieving test data...')
-      const expenses = await surrealDB.getExpenses(user.id)
-      const retrievedUser = await surrealDB.getUser(user.id)
-      
-      setTestData({
-        user: retrievedUser,
-        expenses: expenses,
-        createdExpense: expense
-      })
-      
-      setStatus('All tests completed successfully! 🎉')
+      setStatus('SurrealDB temporarily disabled for deployment...')
+      setError('SurrealDB integration is temporarily disabled for deployment to Vercel')
       
     } catch (err) {
       console.error('SurrealDB test error:', err)
@@ -130,12 +26,8 @@ export default function SurrealDBTest() {
 
   const clearTestData = async () => {
     try {
-      setStatus('Clearing test data...')
-      if (testData?.user?.id) {
-        await surrealDB.deleteUser(testData.user.id)
-      }
-      setTestData(null)
-      setStatus('Test data cleared!')
+      setStatus('SurrealDB temporarily disabled for deployment...')
+      setError('SurrealDB integration is temporarily disabled for deployment to Vercel')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     }
@@ -143,65 +35,46 @@ export default function SurrealDBTest() {
 
   const fixUsers = async () => {
     try {
-      setStatus('Fixing users with NONE values...')
-      await surrealDB.fixAllUsers()
-      setStatus('All users fixed!')
-      setError(null)
+      setStatus('SurrealDB temporarily disabled for deployment...')
+      setError('SurrealDB integration is temporarily disabled for deployment to Vercel')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
-      setStatus('Fix failed')
     }
   }
 
   const fixDateFields = async () => {
     try {
-      setStatus('Fixing date fields...')
-      await surrealDB.fixDateFieldsSimple()
-      setStatus('Date fields fixed!')
-      setError(null)
+      setStatus('SurrealDB temporarily disabled for deployment...')
+      setError('SurrealDB integration is temporarily disabled for deployment to Vercel')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
-      setStatus('Fix failed')
     }
   }
 
   const fixRecordReferences = async () => {
     try {
-      setStatus('Fixing record references...')
-      await surrealDB.fixRecordReferences()
-      setStatus('Record references fixed!')
-      setError(null)
+      setStatus('SurrealDB temporarily disabled for deployment...')
+      setError('SurrealDB integration is temporarily disabled for deployment to Vercel')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
-      setStatus('Fix failed')
     }
   }
 
   const fixSpecificError = async () => {
     try {
-      setStatus('Fixing specific record error...')
-      const result = await surrealDB.fixSpecificRecordError()
-      if (result.fixed) {
-        setStatus('Specific record error fixed!')
-      } else {
-        setStatus('No specific record found to fix')
-      }
-      setError(null)
+      setStatus('SurrealDB temporarily disabled for deployment...')
+      setError('SurrealDB integration is temporarily disabled for deployment to Vercel')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
-      setStatus('Fix failed')
     }
   }
 
   const fixAllRecordReferences = async () => {
     try {
-      setStatus('Fixing all record references...')
-      const result = await surrealDB.fixAllRecordReferences()
-      setStatus(`Fixed ${result.fixedCount || 0} record references!`)
-      setError(null)
+      setStatus('SurrealDB temporarily disabled for deployment...')
+      setError('SurrealDB integration is temporarily disabled for deployment to Vercel')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
-      setStatus('Fix failed')
     }
   }
 
