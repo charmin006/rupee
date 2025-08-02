@@ -2,147 +2,93 @@
 
 import { useState } from 'react'
 import { Expense, Category } from '@/lib/types'
-import { formatCurrency, formatDate, getCategoryColor, getCategoryIcon } from '@/lib/utils'
-import { Plus, Edit, Trash2 } from 'lucide-react'
 import AddExpenseModal from './AddExpenseModal'
+import RecentExpenses from './RecentExpenses'
+import SpendingChart from './SpendingChart'
 
 interface ExpensesProps {
   expenses: Expense[]
   categories: Category[]
-  onAddExpense: (expense: any) => void
-  onUpdateExpense: (expense: any) => void
-  onDeleteExpense: (id: string) => void
+  onAddExpense: (expense: Expense) => Promise<void>
+  onUpdateExpense: (expense: Expense) => Promise<void>
+  onDeleteExpense: (id: string) => Promise<void>
 }
 
-export default function Expenses({
-  expenses,
-  categories,
-  onAddExpense,
-  onUpdateExpense,
-  onDeleteExpense,
-}: ExpensesProps) {
-  const [showAddModal, setShowAddModal] = useState(false)
+export default function Expenses({ expenses, categories, onAddExpense, onUpdateExpense, onDeleteExpense }: ExpensesProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
 
-  const handleEdit = (expense: Expense) => {
-    setEditingExpense(expense)
-    setShowAddModal(true)
+  const handleAddExpense = async (expense: Expense) => {
+    await onAddExpense(expense)
+    setIsModalOpen(false)
   }
 
-  const handleAddOrUpdate = (expenseData: any) => {
-    if (editingExpense) {
-      // Update existing expense
-      const updatedExpense = {
-        ...editingExpense,
-        ...expenseData,
-        updatedAt: new Date().toISOString(),
-      }
-      onUpdateExpense(updatedExpense)
-      setEditingExpense(null)
-    } else {
-      // Add new expense
-      onAddExpense(expenseData)
-    }
-    setShowAddModal(false)
-  }
-
-  const handleCloseModal = () => {
-    setShowAddModal(false)
+  const handleEditExpense = async (expense: Expense) => {
+    await onUpdateExpense(expense)
     setEditingExpense(null)
   }
 
+  const handleDeleteExpense = async (id: string) => {
+    if (confirm('Are you sure you want to delete this expense?')) {
+      await onDeleteExpense(id)
+    }
+  }
+
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0)
+  const thisMonthExpenses = expenses.filter(expense => {
+    const expenseDate = new Date(expense.date)
+    const now = new Date()
+    return expenseDate.getMonth() === now.getMonth() && expenseDate.getFullYear() === now.getFullYear()
+  }).reduce((sum, expense) => sum + expense.amount, 0)
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
-          <p className="text-gray-600">Manage and track your expenses</p>
+          <p className="text-gray-600">Track and manage your expenses</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
-          className="btn-primary flex items-center space-x-2 mt-4 sm:mt-0"
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          <Plus className="h-4 w-4" />
-          <span>Add Expense</span>
+          Add Expense
         </button>
       </div>
 
-      {/* Expenses List */}
-      <div className="card">
-        {expenses.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg mb-2">No expenses yet</p>
-            <p className="text-gray-400 mb-4">Start tracking your expenses to see them here</p>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="btn-primary"
-            >
-              Add Your First Expense
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {expenses.map((expense) => {
-              const categoryColor = getCategoryColor(expense.category, categories)
-              const categoryIcon = getCategoryIcon(expense.category, categories)
-              
-              return (
-                <div
-                  key={expense.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-sm transition-shadow duration-200"
-                >
-                  <div className="flex items-center space-x-4">
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
-                      style={{ backgroundColor: `${categoryColor}20` }}
-                    >
-                      {categoryIcon}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{expense.category}</h3>
-                      <p className="text-sm text-gray-600">
-                        {formatDate(expense.date)} • {expense.paymentMethod}
-                      </p>
-                      {expense.note && (
-                        <p className="text-sm text-gray-500 mt-1">{expense.note}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">
-                        {formatCurrency(expense.amount)}
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(expense)}
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => onDeleteExpense(expense.id)}
-                        className="p-2 text-gray-400 hover:text-danger-600 hover:bg-danger-50 rounded-lg transition-colors duration-200"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Expenses</h3>
+          <p className="text-3xl font-bold text-blue-600">₹{totalExpenses.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">This Month</h3>
+          <p className="text-3xl font-bold text-green-600">₹{thisMonthExpenses.toLocaleString()}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Count</h3>
+          <p className="text-3xl font-bold text-purple-600">{expenses.length}</p>
+        </div>
       </div>
 
-      {/* Add/Edit Expense Modal */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Spending Chart</h3>
+          <SpendingChart expenses={expenses} categories={categories} period="month" />
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Expenses</h3>
+          <RecentExpenses 
+            expenses={expenses.slice(0, 5)} 
+            categories={categories}
+          />
+        </div>
+      </div>
+
       <AddExpenseModal
-        isOpen={showAddModal}
-        onClose={handleCloseModal}
-        onAdd={handleAddOrUpdate}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddExpense}
         categories={categories}
         editingExpense={editingExpense}
       />

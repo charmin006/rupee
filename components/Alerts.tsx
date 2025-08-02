@@ -1,228 +1,166 @@
 'use client'
 
+import { useState } from 'react'
 import { SpendingAlert } from '@/lib/types'
-import { formatCurrency, formatDate, getSeverityColor, getSeverityBadgeClass } from '@/lib/utils'
-import { AlertTriangle, TrendingUp, TrendingDown, Bell, X } from 'lucide-react'
 
 interface AlertsProps {
   alerts: SpendingAlert[]
-  onMarkAlertAsRead: (id: string) => void
-  onDeleteAlert: (id: string) => void
+  onMarkAlertAsRead: (id: string) => Promise<void>
+  onDeleteAlert: (id: string) => Promise<void>
 }
 
 export default function Alerts({ alerts, onMarkAlertAsRead, onDeleteAlert }: AlertsProps) {
-  const unreadAlerts = alerts.filter(alert => !alert.isRead)
-  const readAlerts = alerts.filter(alert => alert.isRead)
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
 
-  const getAlertIcon = (type: SpendingAlert['type']) => {
+  const handleMarkAsRead = async (id: string) => {
+    await onMarkAlertAsRead(id)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this alert?')) {
+      await onDeleteAlert(id)
+    }
+  }
+
+  const filteredAlerts = alerts.filter(alert => {
+    if (filter === 'unread') return !alert.isRead
+    if (filter === 'read') return alert.isRead
+    return true
+  })
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200'
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'low':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  const getAlertIcon = (type: string) => {
     switch (type) {
       case 'budget_limit':
-        return <AlertTriangle className="h-5 w-5" />
+        return '💰'
       case 'overspending':
-        return <TrendingUp className="h-5 w-5" />
+        return '⚠️'
       case 'category_limit':
-        return <AlertTriangle className="h-5 w-5" />
+        return '📊'
       default:
-        return <Bell className="h-5 w-5" />
-    }
-  }
-
-  const getAlertColor = (type: SpendingAlert['type'], severity: 'low' | 'medium' | 'high') => {
-    const severityColor = getSeverityColor(severity)
-    return {
-      borderColor: severityColor,
-      backgroundColor: `${severityColor}10`,
-    }
-  }
-
-  const getPeriodLabel = (period: string) => {
-    switch (period) {
-      case 'day':
-        return 'today'
-      case 'week':
-        return 'this week'
-      case 'month':
-        return 'this month'
-      default:
-        return period
+        return '🔔'
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Alerts & Notifications</h1>
-          <p className="text-gray-600">Stay informed about your spending patterns</p>
+          <h1 className="text-2xl font-bold text-gray-900">Alerts</h1>
+          <p className="text-gray-600">Stay informed about your finances</p>
         </div>
-        {unreadAlerts.length > 0 && (
-          <span className="badge badge-danger mt-2 sm:mt-0">
-            {unreadAlerts.length} new
-          </span>
-        )}
+        <div className="flex space-x-2">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'read')}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Alerts</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+          </select>
+        </div>
       </div>
 
-      {/* Alerts List */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Alerts</h3>
+          <p className="text-3xl font-bold text-blue-600">{alerts.length}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Unread</h3>
+          <p className="text-3xl font-bold text-red-600">{alerts.filter(a => !a.isRead).length}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">High Priority</h3>
+          <p className="text-3xl font-bold text-orange-600">{alerts.filter(a => a.severity === 'high').length}</p>
+        </div>
+      </div>
+
       <div className="space-y-4">
-        {alerts.length === 0 ? (
-          <div className="card text-center py-12">
-            <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg mb-2">No alerts yet</p>
-            <p className="text-gray-400">You'll see spending alerts and budget notifications here</p>
+        {filteredAlerts.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔔</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No alerts</h3>
+            <p className="text-gray-600">
+              {filter === 'all' 
+                ? 'You\'re all caught up! No alerts to show.' 
+                : `No ${filter} alerts to show.`
+              }
+            </p>
           </div>
         ) : (
-          <>
-            {/* Unread Alerts */}
-            {unreadAlerts.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <span className="w-2 h-2 bg-danger-500 rounded-full mr-2"></span>
-                  New Alerts ({unreadAlerts.length})
-                </h2>
-                {unreadAlerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="card border-l-4 ring-2 ring-rupee-200"
-                    style={getAlertColor(alert.type, alert.severity)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3 flex-1">
-                        <div
-                          className="p-2 rounded-lg"
-                          style={{ backgroundColor: getSeverityColor(alert.severity) + '20' }}
-                        >
-                          {getAlertIcon(alert.type)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">{alert.title}</h3>
-                            <span className={`badge ${getSeverityBadgeClass(alert.severity)}`}>
-                              {alert.severity}
-                            </span>
-                          </div>
-                          <p className="text-gray-600 mb-2">{alert.message}</p>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span>{formatDate(alert.date, 'MMM dd, yyyy')}</span>
-                            {alert.category && (
-                              <span>• {alert.category}</span>
-                            )}
-                            <span>• {getPeriodLabel(alert.period)}</span>
-                          </div>
-                          {alert.amount && alert.limit && (
-                            <div className="mt-2 text-sm">
-                              <span className="text-gray-600">Spent: </span>
-                              <span className="font-medium text-gray-900">
-                                {formatCurrency(alert.amount)}
-                              </span>
-                              <span className="text-gray-600"> / </span>
-                              <span className="font-medium text-gray-900">
-                                {formatCurrency(alert.limit)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => onMarkAlertAsRead(alert.id)}
-                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="Mark as read"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
+          filteredAlerts.map((alert) => (
+            <div
+              key={alert.id}
+              className={`bg-white p-6 rounded-lg shadow border-l-4 ${
+                alert.isRead ? 'opacity-75' : ''
+              }`}
+              style={{
+                borderLeftColor: alert.severity === 'high' ? '#EF4444' : 
+                               alert.severity === 'medium' ? '#F59E0B' : '#3B82F6'
+              }}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex items-start space-x-4">
+                  <div className="text-2xl">{getAlertIcon(alert.type)}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <h3 className="font-semibold text-gray-900">{alert.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(alert.severity)}`}>
+                        {alert.severity}
+                      </span>
+                      {!alert.isRead && (
+                        <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mb-2">{alert.message}</p>
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <span>{new Date(alert.date).toLocaleDateString()}</span>
+                      {alert.category && (
+                        <span>Category: {alert.category}</span>
+                      )}
+                      {alert.amount > 0 && (
+                        <span>Amount: ₹{alert.amount.toLocaleString()}</span>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Read Alerts */}
-            {readAlerts.length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-lg font-semibold text-gray-900">Previous Alerts</h2>
-                {readAlerts.map((alert) => (
-                  <div
-                    key={alert.id}
-                    className="card border-l-4 opacity-75 hover:opacity-100 transition-opacity"
-                    style={getAlertColor(alert.type, alert.severity)}
+                </div>
+                <div className="flex space-x-2">
+                  {!alert.isRead && (
+                    <button
+                      onClick={() => handleMarkAsRead(alert.id)}
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title="Mark as read"
+                    >
+                      ✓
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(alert.id)}
+                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Delete alert"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3 flex-1">
-                        <div
-                          className="p-2 rounded-lg"
-                          style={{ backgroundColor: getSeverityColor(alert.severity) + '20' }}
-                        >
-                          {getAlertIcon(alert.type)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">{alert.title}</h3>
-                            <span className={`badge ${getSeverityBadgeClass(alert.severity)}`}>
-                              {alert.severity}
-                            </span>
-                          </div>
-                          <p className="text-gray-600 mb-2">{alert.message}</p>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span>{formatDate(alert.date, 'MMM dd, yyyy')}</span>
-                            {alert.category && (
-                              <span>• {alert.category}</span>
-                            )}
-                            <span>• {getPeriodLabel(alert.period)}</span>
-                          </div>
-                          {alert.amount && alert.limit && (
-                            <div className="mt-2 text-sm">
-                              <span className="text-gray-600">Spent: </span>
-                              <span className="font-medium text-gray-900">
-                                {formatCurrency(alert.amount)}
-                              </span>
-                              <span className="text-gray-600"> / </span>
-                              <span className="font-medium text-gray-900">
-                                {formatCurrency(alert.limit)}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => onDeleteAlert(alert.id)}
-                          className="p-1 text-gray-400 hover:text-danger-600 transition-colors"
-                          title="Delete alert"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    🗑️
+                  </button>
+                </div>
               </div>
-            )}
-          </>
+            </div>
+          ))
         )}
       </div>
-
-      {/* Alert Types Legend */}
-      {alerts.length > 0 && (
-        <div className="card">
-          <h3 className="font-semibold text-gray-900 mb-3">Alert Types</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-danger-500 rounded-full"></div>
-              <span className="text-gray-600">High Priority</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-warning-500 rounded-full"></div>
-              <span className="text-gray-600">Medium Priority</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-success-500 rounded-full"></div>
-              <span className="text-gray-600">Low Priority</span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 } 

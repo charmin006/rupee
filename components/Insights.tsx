@@ -1,102 +1,158 @@
 'use client'
 
+import { useState } from 'react'
 import { SpendingInsight } from '@/lib/types'
-import { formatDate } from '@/lib/utils'
-import { Lightbulb, TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from 'lucide-react'
 
 interface InsightsProps {
   insights: SpendingInsight[]
-  onMarkInsightAsRead: (id: string) => void
+  onMarkInsightAsRead: (id: string) => Promise<void>
 }
 
 export default function Insights({ insights, onMarkInsightAsRead }: InsightsProps) {
-  const getInsightIcon = (type: SpendingInsight['type']) => {
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
+
+  const handleMarkAsRead = async (id: string) => {
+    await onMarkInsightAsRead(id)
+  }
+
+  const filteredInsights = insights.filter(insight => {
+    if (filter === 'unread') return !insight.isRead
+    if (filter === 'read') return insight.isRead
+    return true
+  })
+
+  const getInsightIcon = (type: string) => {
     switch (type) {
       case 'spending_increase':
-        return <TrendingUp className="h-5 w-5 text-danger-600" />
+        return '📈'
       case 'spending_decrease':
-        return <TrendingDown className="h-5 w-5 text-success-600" />
+        return '📉'
       case 'budget_alert':
-        return <AlertTriangle className="h-5 w-5 text-warning-600" />
+        return '💰'
       case 'savings_tip':
-        return <CheckCircle className="h-5 w-5 text-success-600" />
+        return '💡'
+      case 'overspending_alert':
+        return '⚠️'
+      case 'goal_achieved':
+        return '🎉'
       default:
-        return <Lightbulb className="h-5 w-5 text-primary-600" />
+        return '📊'
     }
   }
 
-  const getInsightColor = (type: SpendingInsight['type']) => {
+  const getInsightColor = (type: string) => {
     switch (type) {
       case 'spending_increase':
-        return 'bg-danger-50 border-danger-500'
+        return 'border-orange-500 bg-orange-50'
       case 'spending_decrease':
-        return 'bg-success-50 border-success-500'
+        return 'border-green-500 bg-green-50'
       case 'budget_alert':
-        return 'bg-warning-50 border-warning-500'
+        return 'border-red-500 bg-red-50'
       case 'savings_tip':
-        return 'bg-success-50 border-success-500'
+        return 'border-blue-500 bg-blue-50'
+      case 'overspending_alert':
+        return 'border-red-500 bg-red-50'
+      case 'goal_achieved':
+        return 'border-purple-500 bg-purple-50'
       default:
-        return 'bg-primary-50 border-primary-500'
+        return 'border-gray-500 bg-gray-50'
     }
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">AI Insights</h1>
-        <p className="text-gray-600">Intelligent analysis of your spending patterns</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Insights</h1>
+          <p className="text-gray-600">Smart insights about your spending patterns</p>
+        </div>
+        <div className="flex space-x-2">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'read')}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All Insights</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+          </select>
+        </div>
       </div>
 
-      {/* Insights List */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Total Insights</h3>
+          <p className="text-3xl font-bold text-blue-600">{insights.length}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Unread</h3>
+          <p className="text-3xl font-bold text-orange-600">{insights.filter(i => !i.isRead).length}</p>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">This Month</h3>
+          <p className="text-3xl font-bold text-green-600">
+            {insights.filter(i => {
+              const insightDate = new Date(i.date)
+              const now = new Date()
+              return insightDate.getMonth() === now.getMonth() && insightDate.getFullYear() === now.getFullYear()
+            }).length}
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-4">
-        {insights.length === 0 ? (
-          <div className="card text-center py-12">
-            <Lightbulb className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg mb-2">No insights yet</p>
-            <p className="text-gray-400">Add some expenses to get AI-powered insights</p>
+        {filteredInsights.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">💡</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No insights yet</h3>
+            <p className="text-gray-600">
+              {filter === 'all' 
+                ? 'Start tracking your expenses to get personalized insights!' 
+                : `No ${filter} insights to show.`
+              }
+            </p>
           </div>
         ) : (
-          insights.map((insight) => (
+          filteredInsights.map((insight) => (
             <div
               key={insight.id}
-              className={`card border-l-4 ${getInsightColor(insight.type)} ${
-                !insight.isRead ? 'ring-2 ring-rupee-200' : ''
-              }`}
+              className={`bg-white p-6 rounded-lg shadow border-l-4 ${
+                insight.isRead ? 'opacity-75' : ''
+              } ${getInsightColor(insight.type)}`}
             >
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 mt-1">
-                  {getInsightIcon(insight.type)}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-gray-900">{insight.title}</h3>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-500">
-                        {formatDate(insight.date)}
-                      </span>
+              <div className="flex justify-between items-start">
+                <div className="flex items-start space-x-4">
+                  <div className="text-2xl">{getInsightIcon(insight.type)}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <h3 className="font-semibold text-gray-900">{insight.title}</h3>
                       {!insight.isRead && (
-                        <span className="h-2 w-2 bg-rupee-500 rounded-full"></span>
+                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mb-2">{insight.message}</p>
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <span>{new Date(insight.date).toLocaleDateString()}</span>
+                      {insight.category && (
+                        <span>Category: {insight.category}</span>
+                      )}
+                      {insight.percentage && (
+                        <span>Change: {insight.percentage > 0 ? '+' : ''}{insight.percentage}%</span>
                       )}
                     </div>
                   </div>
-                  <p className="text-gray-600 mt-1">{insight.message}</p>
-                  {insight.category && (
-                    <div className="mt-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {insight.category}
-                      </span>
-                    </div>
+                </div>
+                <div className="flex space-x-2">
+                  {!insight.isRead && (
+                    <button
+                      onClick={() => handleMarkAsRead(insight.id)}
+                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title="Mark as read"
+                    >
+                      ✓
+                    </button>
                   )}
                 </div>
-                {!insight.isRead && (
-                  <button
-                    onClick={() => onMarkInsightAsRead(insight.id)}
-                    className="text-sm text-rupee-600 hover:text-rupee-700 font-medium"
-                  >
-                    Mark as read
-                  </button>
-                )}
               </div>
             </div>
           ))
